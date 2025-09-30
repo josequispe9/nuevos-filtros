@@ -251,17 +251,49 @@ iris_files = get_unprocessed_files(IRIS_DIR, '.txt')
 print(f"\nArchivos de Iris a procesar: {len(iris_files)}")
 
 df_iris_all = pd.DataFrame()
-
+# En la sección de procesamiento de archivos IRIS, reemplaza el bloque try-except por esto:
 for file in iris_files:
     print(f"\n→ Procesando: {file.name}")
     
     try:
-        df_temp = pd.read_csv(file, sep='&', encoding='utf-8', dtype=str)
+        # Leer el archivo SIN asumir número fijo de columnas
+        # on_bad_lines='skip' descarta automáticamente filas problemáticas
+        df_temp = pd.read_csv(
+            file, 
+            sep='&', 
+            encoding='utf-8', 
+            dtype=str,
+            header=None,  # Sin encabezados
+            on_bad_lines='skip'  # Saltar líneas con problemas
+        )
+        
+        initial_count = len(df_temp)
+        
+        # Filtrar solo filas que tengan exactamente 3 columnas
+        df_temp = df_temp[df_temp.apply(lambda row: row.notna().sum() == 3, axis=1)]
+        
+        # Si después del filtro no quedan filas, saltar archivo
+        if df_temp.empty:
+            print(f"  ✗ No se encontraron filas válidas con 3 columnas")
+            continue
+        
+        # Tomar solo las primeras 3 columnas
+        df_temp = df_temp.iloc[:, :3]
+        df_temp.columns = ['linea', 'fecha', 'estado']
+        
+        corrupted_rows = initial_count - len(df_temp)
+        if corrupted_rows > 0:
+            print(f"  ⚠ Se descartaron {corrupted_rows} filas corruptas/incompletas")
         
         # LIMPIEZA DE DATOS (Iris)
-        df_temp.columns = ['linea', 'fecha', 'estado']
-        df_temp['fecha'] = pd.to_datetime(df_temp['fecha'], format='%d/%m/%Y')
-        df_temp = df_temp.dropna(subset=['linea', 'fecha', 'estado'])
+        df_temp['fecha'] = pd.to_datetime(df_temp['fecha'], format='%d/%m/%Y', errors='coerce')
+        
+        # Eliminar filas donde la fecha no se pudo convertir
+        df_temp = df_temp.dropna(subset=['fecha'])
+        
+        # Validación adicional: verificar que 'linea' contenga solo dígitos
+        df_temp = df_temp[df_temp['linea'].str.match(r'^\d+$', na=False)]
+        
         df_temp = df_temp.sort_values(by='fecha', ascending=False)
         df_temp = df_temp.drop_duplicates(subset='linea', keep='first')
         df_temp['fecha_consulta'] = datetime.today().date()
@@ -277,7 +309,6 @@ for file in iris_files:
     except Exception as e:
         print(f"  ✗ Error procesando {file.name}: {str(e)}")
         continue
-
 
 # ==================== EXPORTACIÓN DE DATOS ====================
 print("\n" + "="*60)
