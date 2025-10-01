@@ -261,7 +261,6 @@ Data columns (total 4 columns):
 dtypes: object(4)
 memory usage: 166.9+ MB
 """
-df_iris_consolidado['estado'].value_counts()
 
 # --- Asegurar tipos ---
 df_base['linea'] = df_base['linea'].astype(str)
@@ -288,16 +287,11 @@ df_filtered = df_base[
 print(f"Registros originales: {df_base.shape[0]}")
 print(f"Registros después del filtro: {df_filtered.shape[0]}")
 
-df_filtered.head(2)
-df_filtered.info()
-
-
 
 
 # ---------------------
 # QUITAR LOTE LLAMADO AYER
 # ---------------------
-
 
 
 
