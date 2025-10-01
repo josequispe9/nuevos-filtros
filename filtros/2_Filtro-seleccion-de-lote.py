@@ -155,7 +155,7 @@ mask_cpp = (
 )
 mask_prepagos = (
     (df_base['contrato'] == 'Activa (Prepago)') &
-    (df_base['fecha_portout'].dt.year.isin([2025]))
+    (df_base['fecha_portout'].dt.year.isin([2025, 2024]))
 )
 df_base = df_base[mask_cpp | mask_prepagos]
 print(f"Eliminados por reglas de contrato+año: {registros_antes - df_base.shape[0]}")
@@ -169,6 +169,7 @@ df_base = df_base.dropna(subset=['cantidad_de_lineas'])
 df_base = df_base[(df_base['cantidad_de_lineas'] >= 1) & (df_base['cantidad_de_lineas'] <= 7)]
 print(f"Eliminados por cantidad de líneas: {registros_antes - df_base.shape[0]}")
 print(f"Registros restantes: {df_base.shape[0]}")
+
 
 # 6. Filtrar por compañía (Claro)  -- NO FILTRAR SOLO POR CLARO
 print("\n=== FILTRO 6: COMPAÑÍA ===")
