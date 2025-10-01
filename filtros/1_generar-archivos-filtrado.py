@@ -4,6 +4,16 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+"""Usar parquet
+
+# Leer CSV, forzando todo como str
+df = pd.read_csv("mi_archivo.csv", sep=";", dtype=str, encoding="utf-8")
+
+# Guardar en Parquet, manteniendo todo como str
+df = df.astype(str)  # asegura que todas las columnas sean string
+df.to_parquet("mi_archivo.parquet", engine="pyarrow", compression="snappy", index=False)
+
+"""
 
 # ==================== CONFIGURACIÓN DE PATHS ====================
 # El script está en filtros/, los datos están en data/ (un nivel arriba)
@@ -14,8 +24,8 @@ DATA_PROCESSED = BASE_DIR / 'data' / 'processed'
 REPORTES_DIR = DATA_RAW / 'reportes'
 IRIS_DIR = DATA_RAW / 'extraerEstado'
 
-TIPIFICACIONES_OUTPUT = DATA_PROCESSED / 'Tipificaciones-consolidadas.csv'
-IRIS_OUTPUT = DATA_PROCESSED / 'Iris-consolidado.csv'
+TIPIFICACIONES_OUTPUT = DATA_PROCESSED / 'Tipificaciones-consolidadas.parquet'
+IRIS_OUTPUT = DATA_PROCESSED / 'Iris-consolidado.parquet'
 
 
 # ==================== FUNCIONES AUXILIARES ====================
@@ -94,7 +104,7 @@ def load_existing_consolidated(file_path, key_column):
     """
     if file_path.exists():
         try:
-            df = pd.read_csv(file_path, sep=';', encoding='utf-8', dtype=str)
+            df = pd.read_parquet(file_path, engine='pyarrow')
             
             # Verificar si el DataFrame está vacío o no tiene columnas
             if df.empty or len(df.columns) == 0:
@@ -104,17 +114,12 @@ def load_existing_consolidated(file_path, key_column):
             df['fecha'] = pd.to_datetime(df['fecha'])
             print(f"✓ Cargado consolidado existente: {len(df)} registros")
             return df
-        except pd.errors.EmptyDataError:
-            print(f"⚠ El archivo consolidado existe pero está vacío, se creará nuevo")
-            return pd.DataFrame()
         except Exception as e:
             print(f"⚠ Error al cargar consolidado ({str(e)}), se creará nuevo")
             return pd.DataFrame()
     else:
         print(f"⚠ No existe consolidado previo, se creará nuevo")
         return pd.DataFrame()
-
-
 
 def update_consolidated(df_existing, df_new, key_column):
     """
@@ -222,7 +227,7 @@ for file in reportes_files:
         df_temp['fecha'] = df_temp['Inicio'].dt.date
         df_temp['fecha_consulta'] = datetime.today().date()
         
-        # ✅ COLUMNAS A CONSERVAR (esto faltaba!)
+        # ✅ COLUMNAS A CONSERVAR
         df_temp = df_temp[['Cliente', 'Tipificacion', 'fecha', 'fecha_consulta']]
         
         # Eliminar filas con Cliente nulo (normalize_phone puede retornar None)
@@ -251,7 +256,7 @@ iris_files = get_unprocessed_files(IRIS_DIR, '.txt')
 print(f"\nArchivos de Iris a procesar: {len(iris_files)}")
 
 df_iris_all = pd.DataFrame()
-# En la sección de procesamiento de archivos IRIS, reemplaza el bloque try-except por esto:
+
 for file in iris_files:
     print(f"\n→ Procesando: {file.name}")
     
@@ -323,7 +328,8 @@ if not df_reporte_all.empty:
     print("\n→ Consolidando Tipificaciones...")
     df_tipificaciones_existing = load_existing_consolidated(TIPIFICACIONES_OUTPUT, 'Cliente')
     df_tipificaciones_final = update_consolidated(df_tipificaciones_existing, df_reporte_all, 'Cliente')
-    df_tipificaciones_final.to_csv(TIPIFICACIONES_OUTPUT, sep=';', encoding='utf-8-sig', index=False)
+    df_tipificaciones_final = df_tipificaciones_final.astype(str)
+    df_tipificaciones_final.to_parquet(TIPIFICACIONES_OUTPUT, engine='pyarrow', compression='snappy', index=False)
     print(f"✓ Guardado: {TIPIFICACIONES_OUTPUT}")
     print(f"  Total registros: {len(df_tipificaciones_final)}")
 else:
@@ -334,7 +340,8 @@ if not df_iris_all.empty:
     print("\n→ Consolidando Iris...")
     df_iris_existing = load_existing_consolidated(IRIS_OUTPUT, 'linea')
     df_iris_final = update_consolidated(df_iris_existing, df_iris_all, 'linea')
-    df_iris_final.to_csv(IRIS_OUTPUT, sep=';', encoding='utf-8-sig', index=False)
+    df_iris_final = df_iris_final.astype(str)
+    df_iris_final.to_parquet(IRIS_OUTPUT, engine='pyarrow', compression='snappy', index=False)
     print(f"✓ Guardado: {IRIS_OUTPUT}")
     print(f"  Total registros: {len(df_iris_final)}")
 else:
@@ -343,8 +350,6 @@ else:
 print("\n" + "="*60)
 print("PROCESO COMPLETADO")
 print("="*60 + "\n")
-
-
 
 
 
