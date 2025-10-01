@@ -13,6 +13,7 @@ BASE_MAIN_DIR = DATA_ROOT / 'base_2024_2025_actualizada.parquet'
 NO_LLAME_DIR = DATA_ROOT / 'Registro_No_Llame.parquet'
 LINEAS_FILTRADAS = DATA_ROOT / 'lineas_filtradas_150.parquet'
 IRIS_CONSOLIDADO = DATA_ROOT / 'processed/Iris-consolidado.parquet'
+REPORTE_DIA_ANTERIOR = DATA_ROOT / 'raw/reportes/092925-p.csv'
 
 
 # ==================== CARGAR DATAFRAMES ====================
@@ -21,6 +22,7 @@ df_base = pd.read_parquet(BASE_MAIN_DIR, engine="pyarrow")
 df_lineas_filtradas = pd.read_parquet(LINEAS_FILTRADAS, engine="pyarrow")
 df_registro_no_llame = pd.read_parquet(NO_LLAME_DIR, engine="pyarrow")
 df_iris_consolidado = pd.read_parquet(IRIS_CONSOLIDADO, engine="pyarrow")
+df_reporte_dia_anterior = pd.read_csv(REPORTE_DIA_ANTERIOR, sep=';', encoding='utf-8', dtype=str)
 
 # ==================== INFO DE DATAFRAMES ====================
 df_base.head(3)
@@ -280,3 +282,52 @@ print(f"Registros después del filtro: {df_filtered.shape[0]}")
 df_filtered.head(2)
 df_filtered.info()
 
+
+
+
+# ---------------------
+# QUITAR LOTE LLAMADO AYER
+# ---------------------
+
+
+df_reporte_dia_anterior.head(2)
+df_reporte_dia_anterior.info()
+
+cant_original = df_reporte_dia_anterior.shape[0]
+df_reporte_dia_anterior = df_reporte_dia_anterior[df_reporte_dia_anterior['Cliente'].notna() & (df_reporte_dia_anterior['Cliente'].str.strip() != '')].copy()
+print(f"Registros nulos/vacíos eliminados el reporte: {cant_original - df_reporte_dia_anterior.shape[0]}")
+
+
+def procesar_numero(numero):
+    """Procesa un número telefónico según las reglas especificadas"""
+    if not isinstance(numero, str):
+        numero = str(numero)
+        
+    numero = numero.strip()
+    
+    if numero.startswith("0"):
+        numero = numero[1:]
+    if numero.startswith("90"):
+        numero = numero[2:]
+    if numero.startswith("11"):
+        if len(numero) > 3 and numero[2:4] == "15":  # Si "15" sigue a la característica
+            numero = "11" + numero[4:]
+    else:
+        # Procesar otras características (3 o 4 dígitos)
+        if len(numero) >= 5:
+            caracteristica = numero[:3]
+            if numero[3:5] == "15":  # Característica de 3 dígitos
+                numero = caracteristica + numero[5:]
+            elif len(numero) > 4 and numero[:4].isdigit() and numero[4:6] == "15":  # Característica de 4 dígitos
+                caracteristica = numero[:4]
+                numero = caracteristica + numero[6:]
+    
+    return numero
+
+df_reporte_dia_anterior['Cliente'] = df_reporte_dia_anterior['Cliente'].apply(procesar_numero)
+cant_original = df_base.shape[0]
+df_base = df_base[~df_base['linea'].isin(df_reporte_dia_anterior['Cliente'])].copy()
+print(f"Registros eliminados de df_base: {cant_original - df_base.shape[0]}")
+print(f"Registros restantes en df_base: {df_base.shape[0]}")
+ 
+df_base.to_csv("base.csv", sep=';', encoding='utf-8')
