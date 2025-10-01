@@ -25,9 +25,10 @@ df_iris_consolidado = pd.read_parquet(IRIS_CONSOLIDADO, engine="pyarrow")
 df_reporte_dia_anterior = pd.read_csv(REPORTE_DIA_ANTERIOR, sep=';', encoding='utf-8', dtype=str)
 
 # ==================== INFO DE DATAFRAMES ====================
-df_base.head(3)
-df_base.info(verbose=True, show_counts=True)
+
 """
+df_base.info(verbose=True, show_counts=True)
+
 formato:
 <class 'pandas.core.frame.DataFrame'>
 Index: 5182930 entries, 0 to 6496111
@@ -47,8 +48,10 @@ dtypes: object(9)
 memory usage: 395.4+ MB
 
 """
-df_lineas_filtradas.info(verbose=True, show_counts=True)
+# ------------
 """
+df_lineas_filtradas.info(verbose=True, show_counts=True)
+
 formato:
 <class 'pandas.core.frame.DataFrame'>
 RangeIndex: 1049287 entries, 0 to 1049286
@@ -59,8 +62,10 @@ Data columns (total 1 columns):
 dtypes: object(1)
 memory usage: 8.0+ MB
 """
-df_registro_no_llame.info(verbose=True, show_counts=True)
+# -------------
 """
+df_registro_no_llame.info(verbose=True, show_counts=True)
+
 formato:
 <class 'pandas.core.frame.DataFrame'>
 RangeIndex: 3075996 entries, 0 to 3075995
@@ -206,15 +211,16 @@ print("\nDatos listos para procesar")
 # ---------------------
 # ACTUALIZAR ESTADOS CON IRIS CONSOLIDADO
 # ---------------------
-
-df_base.head(2)
 """
+df_base.head(2)
+
 linea	nombre_completo	tipo_doc	dni	compania	contrato	fecha_portout	cantidad_de_lineas	otras_lineas
 1120122233	GUERRINA DOMINGO LUIS	Documento Nacional Identidad	21903576	Claro	Contrato CPP	2024-09-17	3	1126401407, 1154280257
 1120122769	MARTINEZ MARIA CRISTINA	Documento Nacional Identidad	12647091	Claro	Contrato CPP	2025-08-26	1	nan
 """
-df_base.info()
 """
+df_base.info()
+
 <class 'pandas.core.frame.DataFrame'>
 Index: 783363 entries, 255 to 6461328
 Data columns (total 9 columns):
@@ -232,14 +238,17 @@ Data columns (total 9 columns):
 dtypes: datetime64[ns](1), int64(2), object(6)
 memory usage: 59.8+ MB
 """
-df_iris_consolidado.head(2)
 """
+df_iris_consolidado.head(2)
+
 linea	fecha	estado	fecha_consulta
 2966217123	2025-09-30	Port In	2025-09-30
 1161933139	2025-09-30	Port In	2025-09-30
 """
-df_iris_consolidado.info()
+
 """
+df_iris_consolidado.info()
+
 <class 'pandas.core.frame.DataFrame'>
 RangeIndex: 5469332 entries, 0 to 5469331
 Data columns (total 4 columns):
@@ -290,8 +299,7 @@ df_filtered.info()
 # ---------------------
 
 
-df_reporte_dia_anterior.head(2)
-df_reporte_dia_anterior.info()
+
 
 cant_original = df_reporte_dia_anterior.shape[0]
 df_reporte_dia_anterior = df_reporte_dia_anterior[df_reporte_dia_anterior['Cliente'].notna() & (df_reporte_dia_anterior['Cliente'].str.strip() != '')].copy()
