@@ -7,13 +7,14 @@ from pathlib import Path
 # ==================== CONFIGURACIÓN DE PATHS ====================
 BASE_DIR = Path(__file__).parent.parent
 DATA_ROOT = BASE_DIR / 'data' 
-BASE_OUTPUT = DATA_ROOT / 'bases'
+BASE_OUTPUT = DATA_ROOT / 'bases' / 'base.csv'
 
 BASE_MAIN_DIR = DATA_ROOT / 'base_2024_2025_actualizada.parquet'
 NO_LLAME_DIR = DATA_ROOT / 'Registro_No_Llame.parquet'
 LINEAS_FILTRADAS = DATA_ROOT / 'lineas_filtradas_150.parquet'
 IRIS_CONSOLIDADO = DATA_ROOT / 'processed/Iris-consolidado.parquet'
 REPORTE_DIA_ANTERIOR = DATA_ROOT / 'raw/reportes/092925-p.csv'
+
 
 
 # ==================== CARGAR DATAFRAMES ====================
@@ -333,4 +334,4 @@ df_base = df_base[~df_base['linea'].isin(df_reporte_dia_anterior['Cliente'])].co
 print(f"Registros eliminados de df_base: {cant_original - df_base.shape[0]}")
 print(f"Registros restantes en df_base: {df_base.shape[0]}")
  
-df_base.to_csv("base.csv", sep=';', encoding='utf-8')
+df_base.to_csv(BASE_OUTPUT, sep=';', encoding='utf-8', index=False)
