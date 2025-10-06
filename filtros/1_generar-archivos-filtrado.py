@@ -26,7 +26,7 @@ IRIS_DIR = DATA_RAW / 'extraerEstado'
 
 TIPIFICACIONES_OUTPUT = DATA_PROCESSED / 'Tipificaciones-consolidadas.parquet'
 IRIS_OUTPUT = DATA_PROCESSED / 'Iris-consolidado.parquet'
-
+LINEAS_FILTRADAS_150 = BASE_DIR / 'data' / 'lineas_filtradas_150.parquet'
 
 # ==================== FUNCIONES AUXILIARES ====================
 def normalize_phone(phone):
@@ -353,6 +353,42 @@ print("="*60 + "\n")
 
 
 
+# ==================== ACTUALIZAR LINEAS_FILTRADAS_150 ====================
+print("\n" + "="*60)
+print("ACTUALIZANDO LINEAS_FILTRADAS_150.PARQUET")
+print("="*60)
+
+tipificaciones_file = DATA_PROCESSED / 'Tipificaciones-consolidadas.parquet'
+lineas_filtradas_file = LINEAS_FILTRADAS_150  # Ya está definido arriba
+
+try:
+    # Leer el parquet de Tipificaciones (solo primera columna: Cliente)
+    df_tipificaciones = pd.read_parquet(tipificaciones_file, engine='pyarrow')
+    numeros_tipificaciones = df_tipificaciones['Cliente'].astype(str).str.strip()
+    
+    # Leer el parquet de líneas filtradas
+    df_lineas = pd.read_parquet(lineas_filtradas_file, engine='pyarrow')
+    numeros_lineas = df_lineas.iloc[:, 0].astype(str).str.strip()
+    
+    # Combinar y eliminar duplicados
+    todos_numeros = pd.concat([numeros_lineas, numeros_tipificaciones], ignore_index=True)
+    numeros_unicos = todos_numeros.drop_duplicates()
+    
+    # Crear DataFrame final
+    df_final = pd.DataFrame({df_lineas.columns[0]: numeros_unicos})
+    
+    # Guardar actualizado
+    df_final.to_parquet(lineas_filtradas_file, engine='pyarrow', compression='snappy', index=False)
+    
+    print(f"✓ Proceso completado.")
+    print(f"  Total antes: {len(todos_numeros)}")
+    print(f"  Total después: {len(numeros_unicos)}")
+    print(f"  Duplicados eliminados: {len(todos_numeros) - len(numeros_unicos)}")
+    
+except Exception as e:
+    print(f"✗ Error al actualizar lineas_filtradas_150: {str(e)}")
+
+print("\n" + "="*60 + "\n")
 """
 import pandas as pd
 import re

@@ -13,8 +13,11 @@ BASE_MAIN_DIR = DATA_ROOT / 'base_2024_2025_actualizada.parquet'
 NO_LLAME_DIR = DATA_ROOT / 'Registro_No_Llame.parquet'
 LINEAS_FILTRADAS = DATA_ROOT / 'lineas_filtradas_150.parquet'
 IRIS_CONSOLIDADO = DATA_ROOT / 'processed/Iris-consolidado.parquet'
-REPORTE_DIA_ANTERIOR = DATA_ROOT / 'raw/reportes/092925-p.csv'
 
+ayer = datetime.now() - timedelta(days=1)
+fecha_str = ayer.strftime("%m%d%y")  # formato mmddyy, ej: 100225
+
+REPORTE_DIA_ANTERIOR = DATA_ROOT / f'raw/reportes/{fecha_str}-p.csv'
 
 
 # ==================== CARGAR DATAFRAMES ====================
@@ -22,7 +25,19 @@ REPORTE_DIA_ANTERIOR = DATA_ROOT / 'raw/reportes/092925-p.csv'
 df_base = pd.read_parquet(BASE_MAIN_DIR, engine="pyarrow")
 df_lineas_filtradas = pd.read_parquet(LINEAS_FILTRADAS, engine="pyarrow")
 df_registro_no_llame = pd.read_parquet(NO_LLAME_DIR, engine="pyarrow")
-df_iris_consolidado = pd.read_parquet(IRIS_CONSOLIDADO, engine="pyarrow")
+
+# Cargar Iris con manejo de errores
+try:
+    df_iris_consolidado = pd.read_parquet(IRIS_CONSOLIDADO, engine="pyarrow")
+except Exception as e:
+    print(f"⚠️ Error al cargar Iris-consolidado.parquet: {e}")
+    print("Regenerando archivo desde el script 1_generar-archivos-filtrado.py...")
+    import subprocess
+    import sys
+    script_path = BASE_DIR / 'filtros' / '1_generar-archivos-filtrado.py'
+    subprocess.run([sys.executable, str(script_path)], check=True)
+    df_iris_consolidado = pd.read_parquet(IRIS_CONSOLIDADO, engine="pyarrow")
+
 df_reporte_dia_anterior = pd.read_csv(REPORTE_DIA_ANTERIOR, sep=';', encoding='utf-8', dtype=str)
 
 # ==================== INFO DE DATAFRAMES ====================

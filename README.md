@@ -49,12 +49,38 @@ pip install -r requirements.txt
 **Dependencias:**
 - `pandas`: Manipulación y análisis de datos
 - `pyarrow`: Lectura/escritura de archivos Parquet
+- `requests`: Cliente HTTP para comunicación con Telegram (solo para bot)
 
 ## Uso
 
+### Ejecución Automática con Bot de Telegram
+
+Puedes ejecutar todo el pipeline automáticamente desde tu teléfono usando Telegram:
+
+**Configuración inicial:**
+1. Ejecuta el bot:
+   ```bash
+   python telegram_bot.py
+   ```
+2. Abre Telegram y busca tu bot
+3. Envía el comando `/start`
+
+**Funcionalidad:**
+- ✅ Ejecuta los 3 scripts automáticamente en secuencia
+- 📊 Envía notificaciones de progreso en tiempo real
+- 📎 Envía el archivo CSV final cuando termina
+- ⏱️ Muestra tiempo total de ejecución
+- ❌ Notifica errores si ocurren
+
+**Nota:** El bot debe estar ejecutándose en tu computadora para recibir comandos.
+
+---
+
+### Ejecución Manual
+
 Los scripts deben ejecutarse en orden. Se recomienda ejecutarlos desde la raíz del proyecto:
 
-### 1. Generar Archivos de Filtrado
+#### 1. Generar Archivos de Filtrado
 
 **Descripción:**
 Consolida reportes de llamadas y estados Iris, creando archivos `.parquet` actualizados incrementalmente.
@@ -80,7 +106,7 @@ python filtros/1_generar-archivos-filtrado.py
 
 ---
 
-### 2. Filtro y Selección de Lote
+#### 2. Filtro y Selección de Lote
 
 **Descripción:**
 Aplica reglas de negocio para seleccionar clientes potenciales, eliminando registros no deseados.
@@ -115,7 +141,7 @@ python filtros/2_Filtro-seleccion-de-lote.py
 
 ---
 
-### 3. Formato de Base
+#### 3. Formato de Base
 
 **Descripción:**
 Genera el archivo CSV final con el formato requerido para las campañas de telemarketing.
